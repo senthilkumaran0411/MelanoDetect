@@ -53,42 +53,68 @@ Models are loaded using:
 from tensorflow.keras.models import load_model
 model = load_model("efficientnetb0.h5")  # or rainbowflow_model.h5
 
+## 🧠 Models Used
+
+- **EfficientNetB0**: Lightweight CNN for image classification.
+- **RainbowFlow**: Advanced model fine-tuned for high-accuracy skin cancer detection.
+
+Models are loaded using:
+
+```python
+from tensorflow.keras.models import load_model
+model = load_model("efficientnetb0.h5")  # or rainbowflow_model.h5
+
 ## ⚙️ Installation & Setup
 
-### 1. Clone the repository
-
+1. **Clone the Repository:**
 ```bash
 git clone https://github.com/senthilkumaran0411/MelanoDetector.git
+2. **Navigate to the Project Directory:**
+```bash
 cd MelanoDetect
+3. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+4.**TO Run This Application:**
+```bash
+        python app.py
 
-2. Create a virtual environment
-bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-3. Install dependencies
-bash
-pip install -r requirements.txt
-4. Run the app
-bash
-python app.py
-Visit http://127.0.0.1:5000 in your browser to access the web interface.
+## 📄 PDF Report Generation
 
-📄 PDF Report Generation
 Uses ReportLab to generate a downloadable PDF report after prediction.
 
 The report includes:
+- Uploaded image
+- Prediction result  
+- Confidence score
+- Date and time of analysis
 
-Uploaded image
+## 📸 Webcam Support
 
-Prediction result
+Features:
+- Real-time skin image capture using webcam
+- Direct prediction from captured images
+- No manual file upload required
 
-Confidence score
+Usage:
+```bash
+python webcam_predictor.py
 
-Date and time of analysis
+## 🙏 Thank You!
 
-📸 Webcam Support
-Capture real-time skin images using a webcam
-
-Predict directly from the captured image using webcam_predictor.py
-
-Useful for quick detection without uploading files manually
+<div align="center">
+  
+  ![Typing Animation](https://readme-typing-svg.demolab.com?font=Fira+Code&size=24&duration=2000&pause=500&color=22D3EE&width=500&lines=Thank+You+for+Using+MelanoDetect!;Your+Feedback+Matters+❤️)
+  
+  <br>
+  
+  <img src="https://raw.githubusercontent.com/senthilkumaran0411/MelanoDetector/main/assets/melano-logo-spin.gif" width="150" alt="MelanoDetect Logo">
+  
+  <br><br>
+  
+  **Contact Us:**
+  
+ 📧 **Email:** [senthilkumaran0411@gmail.com](mailto:senthilkumaran0411@gmail.com) 
+ 💻 **GitHub:** [senthilkumaran0411](https://github.com/senthilkumaran0411)
+  
+</div>
