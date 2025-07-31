@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Capture - Skin Cancer Detection</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --text-color: #2c3e50;
+            --light-bg: #f9f9f9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 700px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+        
+        .webcam-container {
+            position: relative;
+            margin: 1.5rem auto;
+            max-width: 640px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        
+        .recording .video-overlay {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+            }
+        }
+        
+        .webcam-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 3;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+        }
+        
+        .recording .status-indicator {
+            background-color: var(--accent-color);
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        video, canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 640px;
+            max-height: 480px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+        }
+        
+        .preview-container {
+            position: relative;
+            margin: 1.5rem auto;
+            max-width: 640px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            transform: scale(0.95);
+        }
+        
+        .preview-container.visible {
+            transform: scale(1);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .webcam-btn {
+            background: linear-gradient(to right, var(--warning-color), #e67e22);
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(to right, var(--success-color), #27ae60);
+        }
+        
+        .back-btn {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+        }
+        
+        .retake-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .instructions {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: var(--light-bg);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .instructions ul {
+            text-align: left;
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .error-message {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--accent-color);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.8s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-20px); 
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0); 
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .webcam-container, .preview-container {
+                max-width: 100%;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <h1 class="slide-in">Capture Image for Analysis</h1>
+        
+        <div class="instructions">
+            <p><strong>How to take a good quality image:</strong></p>
+            <ul>
+                <li>Ensure good lighting conditions</li>
+                <li>Keep the affected area centered in the frame</li>
+                <li>Hold still when capturing the image</li>
+                <li>Position approximately 6-12 inches (15-30 cm) from the camera</li>
+            </ul>
+        </div>
+        
+        <div id="webcamContainer" class="webcam-container">
+            <div class="video-overlay"></div>
+            <div class="webcam-status">
+                <span class="status-indicator"></span>
+                <span id="statusText">Camera Active</span>
+            </div>
+            <video id="video" width="640" height="480" autoplay muted playsinline></video>
+        </div>
+        
+        <div id="previewContainer" class="preview-container hidden">
+            <canvas id="canvas" width="640" height="480"></canvas>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <div class="controls">
+            <button id="captureBtn" class="btn webcam-btn">
+                <span>📸</span> Capture Image
+            </button>
+            
+            <button id="retakeBtn" class="btn retake-btn hidden">
+                <span>🔄</span> Retake Image
+            </button>
+            
+            <form id="uploadForm" method="POST" action="/predict" enctype="multipart/form-data">
+                <input type="file" name="file" id="imageInput" class="hidden">
+                <button type="submit" id="uploadBtn" class="btn analyze-btn hidden">
+                    <span>🔍</span> Analyze Image
+                </button>
+            </form>
+            
+            <a href="/" class="btn back-btn">
+                <span>⬅️</span> Go Back
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const captureBtn = document.getElementById('captureBtn');
+            const retakeBtn = document.getElementById('retakeBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadForm = document.getElementById('uploadForm');
+            const imageInput = document.getElementById('imageInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const webcamContainer = document.getElementById('webcamContainer');
+            const previewContainer = document.getElementById('previewContainer');
+            const statusText = document.getElementById('statusText');
+            
+            let stream = null;
+            
+            // Function to show error message
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+            
+            // Function to initialize webcam
+            async function initializeWebcam() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'environment' // Use back camera on mobile if available
+                        } 
+                    });
+                    
+                    video.srcObject = stream;
+                    captureBtn.disabled = false;
+                } catch (err) {
+                    showError("Unable to access camera: " + err.message);
+                    captureBtn.disabled = true;
+                }
+            }
+            
+            // Initialize webcam on page load
+            initializeWebcam();
+            
+            // Capture image
+            captureBtn.addEventListener('click', () => {
+                webcamContainer.classList.add('recording');
+                statusText.textContent = 'Capturing...';
+                
+                // Small delay to show the capturing animation
+                setTimeout(() => {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Show preview & controls
+                    webcamContainer.classList.remove('recording');
+                    webcamContainer.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
+                    previewContainer.classList.add('visible');
+                    captureBtn.classList.add('hidden');
+                    retakeBtn.classList.remove('hidden');
+                    uploadBtn.classList.remove('hidden');
+                    
+                    // Convert to blob and set as form input
+                    canvas.toBlob(blob => {
+                        const file = new File([blob], "webcam_capture.jpg", { type: "image/jpeg" });
+                        
+                        // Create a FileList object
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        imageInput.files = dataTransfer.files;
+                    }, "image/jpeg", 0.95);
+                }, 500);
+            });
+            
+            // Retake photo
+            retakeBtn.addEventListener('click', () => {
+                previewContainer.classList.add('hidden');
+                previewContainer.classList.remove('visible');
+                webcamContainer.classList.remove('hidden');
+                captureBtn.classList.remove('hidden');
+                retakeBtn.classList.add('hidden');
+                uploadBtn.classList.add('hidden');
+                statusText.textContent = 'Camera Active';
+            });
+            
+            // Handle device orientation changes (mobile)
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    // Reinitialize stream after orientation changes
+                    if (stream) {
+                        const tracks = stream.getTracks();
+                        tracks.forEach(track => track.stop());
+                        initializeWebcam();
+                    }
+                }, 300);
+            });
+            
+            // Stop webcam when page is unloaded
+            window.addEventListener('beforeunload', () => {
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                }
+            });
+        });
+    </script>
+</body>
+</html>
